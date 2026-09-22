@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>冲绳之旅｜2026.10.02–10.06</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{
+  --bg:#f7f8f5; --card:#fff; --text:#273238; --muted:#778287;
+  --line:#e7ebe8; --accent:#4f9c91; --accent2:#eaa66f;
+  --sea:#5ea9c5; --pink:#df8fa5; --shadow:0 8px 24px rgba(40,55,60,.08);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans SC","PingFang SC","Hiragino Sans",Arial,sans-serif}
+button{font:inherit}
+.app{max-width:760px;margin:auto;padding-bottom:32px}
+.hero{padding:26px 18px 18px;background:linear-gradient(145deg,#dff3ef,#fff5e9 58%,#f7e8ed);border-bottom-left-radius:28px;border-bottom-right-radius:28px}
+.hero h1{margin:0;font-size:28px;letter-spacing:.03em}
+.hero p{margin:7px 0 0;color:#5f6c70;font-size:13px}
+.lang{display:flex;gap:7px;margin-top:16px}
+.lang button{border:0;background:rgba(255,255,255,.72);padding:7px 13px;border-radius:999px;color:#667}
+.lang button.active{background:#fff;color:#287a70;box-shadow:0 2px 9px rgba(0,0,0,.08);font-weight:700}
+#map{height:310px;margin:14px;border-radius:22px;box-shadow:var(--shadow);overflow:hidden}
+.section{padding:0 14px}
+.days{display:flex;gap:8px;overflow:auto;padding:4px 2px 12px;scrollbar-width:none}
+.days::-webkit-scrollbar{display:none}
+.daybtn{flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:16px;padding:10px 14px;text-align:left;min-width:94px;box-shadow:0 2px 7px rgba(0,0,0,.03)}
+.daybtn strong{display:block;font-size:14px}.daybtn span{font-size:11px;color:var(--muted)}
+.daybtn.active{background:#e5f3ef;border-color:#b7ddd5;color:#287a70}
+.panel{display:none}.panel.active{display:block}
+.summary{background:#fff;border-radius:20px;padding:15px;box-shadow:var(--shadow);margin-bottom:12px}
+.summary h2{font-size:18px;margin:0 0 5px}.summary p{margin:0;color:var(--muted);font-size:13px;line-height:1.65}
+.timeline{position:relative;margin:10px 0}
+.item{display:grid;grid-template-columns:62px 1fr;gap:10px;margin-bottom:10px}
+.time{font-weight:700;color:#468b82;font-size:12px;padding-top:14px;text-align:right}
+.card{background:#fff;border-radius:18px;padding:13px 14px;box-shadow:var(--shadow);border:1px solid rgba(231,235,232,.8)}
+.card h3{font-size:15px;margin:0 0 5px}.card p{margin:4px 0;color:#657176;font-size:12px;line-height:1.65}
+.tag{display:inline-block;font-size:10px;border-radius:999px;padding:4px 8px;margin:2px 4px 2px 0;background:#eef5f3;color:#39786f}
+.tag.sea{background:#e7f4fa;color:#397d98}.tag.food{background:#fff0e5;color:#a76534}.tag.hotel{background:#f4edf7;color:#7b568d}.tag.warn{background:#fff4d9;color:#9b741c}
+.actions{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap}
+.actions a{font-size:11px;text-decoration:none;color:#fff;background:#5c9d93;border-radius:10px;padding:7px 10px}
+.actions a.alt{background:#eef3f2;color:#46766f}
+.hotelbox{background:#fff;border-radius:20px;padding:15px;box-shadow:var(--shadow);margin:12px 14px}
+.hotelbox h2{font-size:16px;margin:0 0 9px}.hotelrow{padding:9px 0;border-top:1px solid var(--line);font-size:12px;line-height:1.55}.hotelrow:first-of-type{border-top:0}
+.hotelrow b{display:block;font-size:13px}
+.notice{margin:12px 14px;padding:13px 14px;border-radius:16px;background:#fff6df;color:#775f29;font-size:12px;line-height:1.7}
+.footer{padding:12px 18px;color:#90999b;font-size:10px;line-height:1.6}
+.leaflet-popup-content{font-size:12px;line-height:1.5}.leaflet-popup-content b{font-size:13px}
+@media(min-width:760px){.app{padding:18px 0}.hero{border-radius:28px}.mapwrap{padding:0 0}.section{padding:0}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="hero">
+    <h1>🌺 冲绳之旅</h1>
+    <p>2026.10.02 — 2026.10.06　｜　2人　｜　东京 ⇄ 那霸</p>
+    <div class="lang">
+      <button id="zhBtn" class="active" onclick="setLang('zh')">中文</button>
+      <button id="jaBtn" onclick="setLang('ja')">日本語</button>
+    </div>
+  </header>
+
+  <div id="map"></div>
+
+  <section class="section">
+    <div class="days">
+      <button class="daybtn active" onclick="showDay(0)"><strong>10/2</strong><span>抵达那霸</span></button>
+      <button class="daybtn" onclick="showDay(1)"><strong>10/3</strong><span>庆良间两潜</span></button>
+      <button class="daybtn" onclick="showDay(2)"><strong>10/4</strong><span>美国村 → 濑底</span></button>
+      <button class="daybtn" onclick="showDay(3)"><strong>10/5</strong><span>美ら海 → 那霸</span></button>
+      <button class="daybtn" onclick="showDay(4)"><strong>10/6</strong><span>回东京</span></button>
+    </div>
+
+    <div id="day0" class="panel active"></div>
+    <div id="day1" class="panel"></div>
+    <div id="day2" class="panel"></div>
+    <div id="day3" class="panel"></div>
+    <div id="day4" class="panel"></div>
+  </section>
+
+  <div class="hotelbox">
+    <h2>🏨 酒店</h2>
+    <div class="hotelrow"><b>10/2–10/4　ティサージホテル那覇</b>〒900-0036 沖縄県那覇市西2-14-1<br>入住 15:00 / 退房 11:00</div>
+    <div class="hotelrow"><b>10/4–10/5　Hilton 沖縄瀬底リゾート</b>〒905-0227 沖縄県国頭郡本部町瀬底5750<br>入住 15:00 / 退房 11:00<br>泳池、海边、酒店内餐饮；官方可协助安排水上活动。</div>
+    <div class="hotelrow"><b>10/5–10/6　ヒューイットリゾート那覇</b>〒902-0067 沖縄県那覇市安里2-5-16<br>入住 15:00 / 退房 11:00</div>
+  </div>
+
+  <div class="notice">
+    <b>🌊 行程提醒</b><br>
+    10/3 是庆良间一日两潜，不再安排其他水上活动。潜水行程受海况影响，接送时间以预约确认和前一天通知为准。10/5 的奥特莱斯设为“有时间再去”，不要为了赶行程压缩美ら海水族館或瀬長島时间。
+  </div>
+  <div class="footer">
+    地图坐标以公开地图/官方地址信息整理；对于大型区域（如美国村）使用区域锚点。实际导航请以当天 Google Maps 路况为准。<br>
+    酒店地址、Hilton设施与入住退房信息参考官方资料；美ら海水族館正常期开放时间为 8:30–18:30，最后入馆 17:30。
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const P = {
+  airport:[26.1958,127.6460],
+  tissage:[26.214125,127.669701],
+  berry:[26.2149,127.6776],
+  loisir:[26.2180,127.6718],
+  lucky:[26.2162,127.6902],
+  donki:[26.2150,127.6870],
+  nagashichiya:[26.2161,127.6860],
+  okinawapop:[26.2155,127.6868],
+  american:[26.316369,127.756942],
+  chickenpapa:[26.3158,127.7580],
+  happybowls:[26.2860,127.7730],
+  konas:[26.3172,127.7557],
+  hilton:[26.647523,127.858202],
+  churaumi:[26.6944,127.8783],
+  umikaji:[26.176403,127.640501],
+  ashbinah:[26.1607,127.6465],
+  hewitt:[26.21807,127.69584],
+  jacks:[26.2148,127.6707],
+  akatonbo:[26.2152,127.6877]
+};
+
+const places = {
+  airport:{zh:"那霸机场",ja:"那覇空港"},
+  tissage:{zh:"ティサージホテル那覇",ja:"ティサージホテル那覇"},
+  berry:{zh:"Marine Club Berry｜那霸店",ja:"マリンクラブ ベリー 那覇店"},
+  loisir:{zh:"Loisir Hotel Naha｜接送点",ja:"ロワジールホテル那覇｜送迎場所"},
+  lucky:{zh:"LUCKY MAXIMUM",ja:"LUCKY MAXIMUM"},
+  donki:{zh:"ドン・キホーテ 国際通り店｜大头贴",ja:"ドン・キホーテ 国際通り店｜プリクラ"},
+  nagashichiya:{zh:"長七屋 国際通り久茂地店",ja:"長七屋 国際通り久茂地店"},
+  okinawapop:{zh:"OKINAWAPOP.JP 市場本通り店",ja:"OKINAWAPOP.JP 市場本通り店"},
+  american:{zh:"美浜美国村",ja:"美浜アメリカンビレッジ"},
+  chickenpapa:{zh:"CHICKEN&PAPA｜午餐候选",ja:"CHICKEN&PAPA｜ランチ候補"},
+  happybowls:{zh:"HAPPY BOWLS OKINAWA ARAHA｜甜点候选",ja:"HAPPY BOWLS OKINAWA ARAHA｜スイーツ候補"},
+  konas:{zh:"コナズ珈琲アメリカンビレッジ｜甜点候选",ja:"コナズ珈琲アメリカンビレッジ｜スイーツ候補"},
+  hilton:{zh:"Hilton 沖縄瀬底リゾート",ja:"ヒルトン沖縄瀬底リゾート"},
+  churaumi:{zh:"沖縄美ら海水族館",ja:"沖縄美ら海水族館"},
+  umikaji:{zh:"瀬長島ウミカジテラス",ja:"瀬長島ウミカジテラス"},
+  ashbinah:{zh:"沖縄アウトレットモール あしびなー｜有时间再去",ja:"沖縄アウトレットモール あしびなー｜時間があれば"},
+  hewitt:{zh:"ヒューイットリゾート那覇",ja:"ヒューイットリゾート那覇"},
+  jacks:{zh:"ジャッキーステーキハウス",ja:"ジャッキーステーキハウス"},
+  akatonbo:{zh:"鉄板ステーキと沖縄料理 団欒酒場 赤とんぼ｜备用",ja:"鉄板ステーキと沖縄料理 団欒酒場 赤とんぼ｜予備"}
+};
+
+const days = [
+{
+title:["10/2｜东京 → 那霸｜牛排＋国際通り","10/2｜東京 → 那覇｜ステーキ＋国際通り"],
+desc:["抵达后只安排轻松的入住、晚餐和简单逛街。","到着後はチェックイン、夕食、軽い街歩きだけ。"],
+items:[
+["15:25","✈️ NH477 羽田 → 那霸","✈️ NH477 羽田 → 那覇","flight",""],
+["18:00","抵达那霸机场 → 前往酒店","那覇空港 → ホテルへ移動","travel","airport"],
+["18:40–19:15","入住＋放行李","チェックイン＋荷物を置く","hotel","tissage"],
+["19:30–21:00","晚餐｜首选 ジャッキーステーキハウス","夕食｜第一候補 ジャッキーステーキハウス","food","jacks"],
+["备用","如果排队太久 → 赤とんぼ","混雑時 → 赤とんぼへ変更","food","akatonbo"],
+["21:00–22:00","有体力再去国際通り简单逛逛","元気があれば国際通りを軽く散策","walk","donki"]
+]},
+{
+title:["10/3｜慶良間一日两潜｜晚餐＋大头贴","10/3｜慶良間2ダイブ｜夕食＋プリクラ"],
+desc:["今天以潜水为绝对主轴，不再塞其他景点。","今日はダイビングをメインにして、他の観光は詰め込まない。"],
+items:[
+["07:25","Loisir Hotel Naha 接送 → Marine Club Berry","ロワジールホテル那覇 7:25集合 → マリンクラブ ベリー","sea","loisir"],
+["08:30","出港 🚤","出港 🚤","sea","berry"],
+["09:30左右","抵达慶良间潜水区域 → 水面练习","慶良間到着 → 水面練習","sea","berry"],
+["上午","第1潜｜体验潜水","1本目｜体験ダイビング","sea","berry"],
+["中午","船上/行程安排午餐","昼食","food","berry"],
+["下午","第2潜｜体验潜水","2本目｜体験ダイビング","sea","berry"],
+["15:30左右","回港","帰港","sea","berry"],
+["16:30左右","结束 → 那霸市内酒店送回","終了 → 那覇市内ホテルへ送迎","travel","tissage"],
+["17:30–18:00","回酒店洗澡、休息、整理","ホテルでシャワー＋休憩","hotel","tissage"],
+["18:30–20:00","晚餐｜LUCKY MAXIMUM","夕食｜LUCKY MAXIMUM","food","lucky"],
+["20:00–21:30","国際通り → Donki → 拍大头贴 📸","国際通り → ドンキ → プリクラ 📸","walk","donki"]
+]},
+{
+title:["10/4｜取车 → 美国村 → Hilton 濑底","10/4｜レンタカー → アメリカンビレッジ → Hilton 瀬底"],
+desc:["北谷集中逛半天，下午直接开往濑底，把晚上完整留给酒店。","北谷をまとめて楽しみ、午後は瀬底へ。夜はホテルステイを満喫。"],
+items:[
+["09:00","退房、整理行李","チェックアウト、荷物整理","hotel","tissage"],
+["09:45","TIMES CAR 那覇西町交差点前取车","タイムズカー 那覇西町交差点前で受取","car","tissage"],
+["10:30–13:30","美浜美国村｜购物、海边拍照","美浜アメリカンビレッジ｜ショッピング・海辺フォト","photo","american"],
+["午餐","第一候选｜CHICKEN&PAPA","第一候補｜CHICKEN&PAPA","food","chickenpapa"],
+["下午茶","HAPPY BOWLS / コナズ珈琲 二选一","HAPPY BOWLS / コナズ珈琲 から選択","food","happybowls"],
+["13:30–15:00","美国村继续逛 → Sunset Beach附近拍照","アメリカンビレッジ散策 → Sunset Beach周辺","photo","american"],
+["15:00","出发前往瀬底岛","瀬底島へ出発","car","hilton"],
+["16:00–16:30","Hilton 沖縄瀬底リゾート入住","ヒルトン沖縄瀬底リゾート チェックイン","hotel","hilton"],
+["16:30–晚上","海边＋泳池＋酒店拍照＋夕阳＋晚餐","ビーチ＋プール＋ホテルフォト＋サンセット＋夕食","hotel","hilton"]
+]},
+{
+title:["10/5｜美ら海水族館 → 海景午餐 → 瀬長島 → 那霸","10/5｜美ら海水族館 → 海景ランチ → 瀬長島 → 那覇"],
+desc:["这天最容易赶，所以奥特莱斯只作为“有时间再去”。","この日は詰まりやすいため、アウトレットは時間があれば。"],
+items:[
+["08:00","Hilton 早餐","ヒルトン朝食","food","hilton"],
+["09:00–10:30","泳池 / 海边 / 酒店拍照","プール / ビーチ / ホテルフォト","hotel","hilton"],
+["11:00","退房","チェックアウト","hotel","hilton"],
+["11:15–13:30","沖縄美ら海水族館","沖縄美ら海水族館","sea","churaumi"],
+["13:30–14:30","海景午餐｜レストラン「イノー」等","海景ランチ｜レストラン「イノー」など","food","churaumi"],
+["14:30","出发 → 那霸方向","那覇方面へ出発","car","umikaji"],
+["16:30–17:30","瀬長島ウミカジテラス｜海边、飞机、甜点、拍照","瀬長島ウミカジテラス｜海・飛行機・スイーツ・フォト","photo","umikaji"],
+["17:45–18:45","奥特莱斯｜有时间再去","アウトレット｜時間があれば","shopping","ashbinah"],
+["19:00左右","还车 → ヒューイットリゾート那覇","レンタカー返却 → ヒューイットリゾート那覇","car","hewitt"],
+["晚上","入住后自由活动／国際通り","チェックイン後は自由時間／国際通り","hotel","hewitt"]
+]},
+{
+title:["10/6｜那霸 → 东京","10/6｜那覇 → 東京"],
+desc:["最后一天不安排远距离景点，保证有充足机场时间。","最終日は遠出せず、空港へ余裕を持って移動。"],
+items:[
+["早餐","酒店早餐","ホテル朝食","food","hewitt"],
+["上午","退房 → 那霸机场","チェックアウト → 那覇空港へ","travel","airport"],
+["12:05","✈️ NH464 那霸 → 羽田","✈️ NH464 那覇 → 羽田","flight","airport"],
+["14:30","抵达东京","東京着","flight","airport"]
+]}
+];
+
+let lang="zh";
+const map=L.map("map",{zoomControl:false}).setView(P.tissage,11);
+L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",{maxZoom:19,attribution:"© OpenStreetMap © CARTO"}).addTo(map);
+const markers={};
+const markerLayer=L.layerGroup().addTo(map);
+const routeLayer=L.layerGroup().addTo(map);
+
+function nav(key){
+  const [lat,lng]=P[key];
+  return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+}
+function addMarker(key){
+  if(markers[key]) return markers[key];
+  const m=L.marker(P[key]).addTo(markerLayer).bindPopup(`<b>${places[key].zh}</b><br>${places[key].ja}`);
+  markers[key]=m; return m;
+}
+Object.keys(P).forEach(addMarker);
+
+function renderDay(i){
+  const d=days[i];
+  const el=document.getElementById("day"+i);
+  el.innerHTML=`<div class="summary"><h2>${d.title[lang==="zh"?0:1]}</h2><p>${d.desc[lang==="zh"?0:1]}</p></div>
+  <div class="timeline">${d.items.map(x=>{
+    const [time,zh,ja,type,key]=x;
+    const label=lang==="zh"?zh:ja;
+    const tag= type==="sea"?"sea":type==="food"?"food":type==="hotel"?"hotel":type==="car"?"":"";
+    const icon=type==="sea"?"🌊":type==="food"?"🍽️":type==="hotel"?"🏨":type==="car"?"🚗":type==="photo"?"📸":type==="flight"?"✈️":"";
+    return `<div class="item"><div class="time">${time}</div><div class="card"><h3>${icon} ${label}</h3>
+    ${type==="sea"&&key==="berry"?`<span class="tag sea">初心者OK</span><span class="tag sea">一日2潜</span><span class="tag warn">海况影响</span>`:""}
+    ${type==="hotel"?`<span class="tag hotel">住宿</span>`:""}
+    ${type==="food"?`<span class="tag food">餐饮</span>`:""}
+    ${type==="photo"?`<span class="tag">Photo Spot</span>`:""}
+    ${type==="shopping"?`<span class="tag">Shopping</span>`:""}
+    ${key==="ashbinah"?`<span class="tag warn">有时间再去</span>`:""}
+    <div class="actions">${key?`<a href="${nav(key)}" target="_blank">📍 ${lang==="zh"?"导航":"ナビ"}</a>`:""}</div>
+    </div></div>`;
+  }).join("")}</div>`;
+}
+function showDay(i){
+  document.querySelectorAll(".panel").forEach((x,n)=>x.classList.toggle("active",n===i));
+  document.querySelectorAll(".daybtn").forEach((x,n)=>x.classList.toggle("active",n===i));
+  routeLayer.clearLayers();
+  const keys=days[i].items.map(x=>x[4]).filter(Boolean);
+  const coords=keys.map(k=>P[k]);
+  if(coords.length>1)L.polyline(coords,{weight:4,opacity:.65,dashArray:"7 7"}).addTo(routeLayer);
+  if(coords.length){map.fitBounds(L.latLngBounds(coords),{padding:[30,30],maxZoom:13});}
+  renderDay(i);
+}
+function setLang(l){
+  lang=l;
+  document.getElementById("zhBtn").classList.toggle("active",l==="zh");
+  document.getElementById("jaBtn").classList.toggle("active",l==="ja");
+  const active=[...document.querySelectorAll(".panel")].findIndex(x=>x.classList.contains("active"));
+  for(let i=0;i<days.length;i++)renderDay(i);
+  showDay(active<0?0:active);
+}
+for(let i=0;i<days.length;i++)renderDay(i);
+showDay(0);
+</script>
+</body>
+</html>
