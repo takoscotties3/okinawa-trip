@@ -101,7 +101,7 @@ button{font:inherit}
 const P = {
   airport:[26.1958,127.6460],
   tissage:[26.214125,127.669701],
-  berry:[26.2149,127.6776],
+  berry:[26.243133,127.680725],
   loisir:[26.2180,127.6718],
   lucky:[26.2162,127.6902],
   donki:[26.2150,127.6870],
@@ -109,15 +109,15 @@ const P = {
   okinawapop:[26.2155,127.6868],
   american:[26.316369,127.756942],
   chickenpapa:[26.3158,127.7580],
-  happybowls:[26.2860,127.7730],
+  happybowls:[26.30732,127.759889],
   konas:[26.3172,127.7557],
   hilton:[26.647523,127.858202],
   churaumi:[26.6944,127.8783],
-  umikaji:[26.176403,127.640501],
-  ashbinah:[26.1607,127.6465],
+  umikaji:[26.17697,127.64129],
+  ashbinah:[26.1591252,127.6574181],
   hewitt:[26.21807,127.69584],
   jacks:[26.2148,127.6707],
-  akatonbo:[26.2152,127.6877]
+  akatonbo:[26.2156,127.6758]
 };
 
 const places = {
@@ -140,6 +140,28 @@ const places = {
   hewitt:{zh:"ヒューイットリゾート那覇",ja:"ヒューイットリゾート那覇"},
   jacks:{zh:"ジャッキーステーキハウス",ja:"ジャッキーステーキハウス"},
   akatonbo:{zh:"鉄板ステーキと沖縄料理 団欒酒場 赤とんぼ｜备用",ja:"鉄板ステーキと沖縄料理 団欒酒場 赤とんぼ｜予備"}
+};
+
+const navAddress = {
+  airport:"Naha Airport, Okinawa, Japan",
+  tissage:"ティサージホテル那覇, 沖縄県那覇市西2-14-1",
+  berry:"マリンクラブ ベリー 那覇店, 沖縄県那覇市港町2-3-13",
+  loisir:"ロワジールホテル那覇, 沖縄県那覇市西3-2-1",
+  lucky:"LUCKY MAXIMUM, 沖縄県那覇市牧志2-16-12",
+  donki:"ドン・キホーテ 国際通り店, 沖縄県那覇市松尾2-8-19",
+  nagashichiya:"長七屋 国際通り久茂地店, 沖縄県那覇市久茂地3-29-65",
+  okinawapop:"OKINAWAPOP.JP 市場本通り店, 沖縄県那覇市松尾2-9-11",
+  american:"美浜アメリカンビレッジ, 沖縄県中頭郡北谷町美浜9-1",
+  chickenpapa:"CHICKEN&PAPA, 沖縄県中頭郡北谷町北谷2-2-8",
+  happybowls:"HAPPY BOWLS OKINAWA ARAHA, 沖縄県中頭郡北谷町北谷2-20-1",
+  konas:"コナズ珈琲アメリカンビレッジ, 沖縄県中頭郡北谷町美浜9-8",
+  hilton:"ヒルトン沖縄瀬底リゾート, 沖縄県国頭郡本部町瀬底5750",
+  churaumi:"沖縄美ら海水族館, 沖縄県国頭郡本部町石川424",
+  umikaji:"瀬長島ウミカジテラス, 沖縄県豊見城市瀬長174-6",
+  ashbinah:"沖縄アウトレットモール あしびなー, 沖縄県豊見城市豊崎1-188",
+  hewitt:"ヒューイットリゾート那覇, 沖縄県那覇市安里2-5-16",
+  jacks:"ジャッキーステーキハウス, 沖縄県那覇市西1-7-3",
+  akatonbo:"鉄板ステーキと沖縄料理 団欒酒場 赤とんぼ, 沖縄県那覇市東町11-19"
 };
 
 const days = [
@@ -218,12 +240,22 @@ const markerLayer=L.layerGroup().addTo(map);
 const routeLayer=L.layerGroup().addTo(map);
 
 function nav(key){
-  const [lat,lng]=P[key];
-  return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+  const destination = navAddress[key] || places[key]?.ja || "Okinawa";
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}`;
+}
+function dayRouteUrl(i){
+  const keys=[...new Set(days[i].items.map(x=>x[4]).filter(Boolean))];
+  if(keys.length<2) return null;
+  const destinations=keys.map(k=>navAddress[k]).filter(Boolean);
+  if(destinations.length<2) return null;
+  const origin=encodeURIComponent(destinations[0]);
+  const destination=encodeURIComponent(destinations[destinations.length-1]);
+  const waypoints=destinations.slice(1,-1).map(x=>encodeURIComponent(x)).join("|");
+  return `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}${waypoints?`&waypoints=${waypoints}`:""}`;
 }
 function addMarker(key){
   if(markers[key]) return markers[key];
-  const m=L.marker(P[key]).addTo(markerLayer).bindPopup(`<b>${places[key].zh}</b><br>${places[key].ja}`);
+  const m=L.marker(P[key]).addTo(markerLayer).bindPopup(`<b>${places[key].zh}</b><br>${places[key].ja}${navAddress[key]?`<br><small>${navAddress[key]}</small>`:""}`);
   markers[key]=m; return m;
 }
 Object.keys(P).forEach(addMarker);
@@ -231,7 +263,7 @@ Object.keys(P).forEach(addMarker);
 function renderDay(i){
   const d=days[i];
   const el=document.getElementById("day"+i);
-  el.innerHTML=`<div class="summary"><h2>${d.title[lang==="zh"?0:1]}</h2><p>${d.desc[lang==="zh"?0:1]}</p></div>
+  el.innerHTML=`<div class="summary"><h2>${d.title[lang==="zh"?0:1]}</h2><p>${d.desc[lang==="zh"?0:1]}</p>${dayRouteUrl(i)?`<a class="dayroute" href="${dayRouteUrl(i)}" target="_blank">🗺️ ${lang==="zh"?"打开当天完整导航":"当日のルートを開く"}</a>`:""}</div>
   <div class="timeline">${d.items.map(x=>{
     const [time,zh,ja,type,key]=x;
     const label=lang==="zh"?zh:ja;
